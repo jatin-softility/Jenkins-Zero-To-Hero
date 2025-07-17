@@ -1,4 +1,5 @@
-
+apiVersion: 1.0.0 # This is a placeholder; consult Harness documentation for the exact API version
+kind: Pipeline   # This specifies that the YAML defines a Harness Pipeline
 pipeline:
   name: "My IDP Application Delivery"
   identifier: "my_idp_app_delivery"
