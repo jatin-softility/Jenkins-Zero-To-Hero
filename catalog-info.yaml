@@ -11,38 +11,3 @@ spec:
   harness:
     owner: group:default/HSF_Admins
     type: harness_project
-  parameters:
-    - title: Harness Project details
-      required:
-        - org_identifier
-        - business_group
-        - business_unit
-        - product_line
-        - project_name
-        - project_acronym
-        - idmart_acronym
-        - idmart_env
-      properties:
-        org_identifier:
-          title: Organization
-          type: string
-          description: Organization under which the product should be registered
-          pattern: ([a-zA-Z][a-zA-Z0-9]*)$
-          ui:field: HarnessOrgPicker
-          ui:autofocus: true
-        business_group:
-          title: Business Group
-          type: string
-          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
-          ui:autofocus: true
-        business_unit:
-          title: Business Unit
-          type: string
-          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
-          ui:autofocus: true
-        product_line:
-          title: Product Line
-          type: string
-          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
-          ui:autofocus: true
-
