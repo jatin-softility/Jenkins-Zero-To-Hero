@@ -7,7 +7,3 @@ metadata:
   tags:
     - account-management
     - solutions-factory
-spec:
-  harness:
-    owner: group:default/HSF_Admins
-    type: harness_project
