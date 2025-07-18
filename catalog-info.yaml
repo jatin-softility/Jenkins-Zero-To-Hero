@@ -1,216 +1,48 @@
-apiVersion: 1.0.0 # This is a placeholder; consult Harness documentation for the exact API version
-kind: Pipeline   # This specifies that the YAML defines a Harness Pipeline
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
 metadata:
-  name: jenkins-zero-to-hero
-  description: Jenkins pipeline examples
+  name: harness-product-onboarding
+  title: Product Onboarding
+  description: New Product Onboarding under an existing Org
+  tags:
+    - account-management
+    - solutions-factory
 spec:
-  type: service
-  lifecycle: production
-  owner: user:default/sjatin
-pipeline:
-  name: "My IDP Application Delivery"
-  identifier: "my_idp_app_delivery"
-  projectIdentifier: "my_idp_project" # Replace with your Harness Project ID
-  orgIdentifier: "default"            # Replace with your Harness Organization ID
-  tags: ["idp", "example", "delivery"]
+  harness:
+    owner: group:default/HSF_Admins
+    type: harness_project
+  parameters:
+    - title: Harness Project details
+      required:
+        - org_identifier
+        - business_group
+        - business_unit
+        - product_line
+        - project_name
+        - project_acronym
+        - idmart_acronym
+        - idmart_env
+      properties:
+        org_identifier:
+          title: Organization
+          type: string
+          description: Organization under which the product should be registered
+          pattern: ([a-zA-Z][a-zA-Z0-9]*)$
+          ui:field: HarnessOrgPicker
+          ui:autofocus: true
+        business_group:
+          title: Business Group
+          type: string
+          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
+          ui:autofocus: true
+        business_unit:
+          title: Business Unit
+          type: string
+          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
+          ui:autofocus: true
+        product_line:
+          title: Product Line
+          type: string
+          pattern: ([a-zA-Z][a-zA-Z0-9\s]*)$
+          ui:autofocus: true
 
-  stages:
-    # Stage 1: Build and Test Application
-    - stage:
-        name: "Build & Unit Test"
-        identifier: "build_unit_test"
-        description: "Builds the application and runs unit tests."
-        type: CI
-        spec:
-          cloneCodebase: true # Clones the repository associated with the pipeline
-          platform:
-            os: Linux
-            arch: Amd64
-          runtime:
-            type: Cloud
-            spec: {} # Use default cloud infrastructure for CI
-          execution:
-            steps:
-              - step:
-                  name: "Install Dependencies"
-                  identifier: "install_dependencies"
-                  type: Run
-                  spec:
-                    shell: bash
-                    command: "npm install" # Example for Node.js, adjust for your tech stack
-              - step:
-                  name: "Build Application"
-                  identifier: "build_application"
-                  type: Run
-                  spec:
-                    shell: bash
-                    command: "npm run build" # Example build command
-              - step:
-                  name: "Run Unit Tests"
-                  identifier: "run_unit_tests"
-                  type: Run
-                  spec:
-                    shell: bash
-                    command: "npm test" # Example test command
-              - step:
-                  name: "Publish Test Results"
-                  identifier: "publish_test_results"
-                  type: TestIntelligencePublisher # Or Junit, etc.
-                  spec:
-                    reportPaths: ["**/junit.xml"] # Adjust to your test report path
-
-    # Stage 2: Security Scan & Quality Gates
-    - stage:
-        name: "Security Scan & Quality"
-        identifier: "security_quality_scan"
-        description: "Runs security scans and checks code quality."
-        type: CI
-        spec:
-          cloneCodebase: true
-          platform:
-            os: Linux
-            arch: Amd64
-          runtime:
-            type: Cloud
-            spec: {}
-          execution:
-            steps:
-              - step:
-                  name: "Run SonarQube Scan"
-                  identifier: "sonarqube_scan"
-                  type: SonarQube # Example for SonarQube integration
-                  spec:
-                    # Configure SonarQube details (e.g., projectKey, host, token)
-                    # This would typically use Harness secrets
-                    projectKey: "my_idp_app"
-                    host: "https://sonarqube.example.com"
-                    token: "<+secrets.getValue('sonarqube_token')>"
-                    # ... other SonarQube specific configurations
-              - step:
-                  name: "Scan Container Image"
-                  identifier: "container_image_scan"
-                  type: GCRScan # Example for Google Container Registry Scan, adjust for your registry/scanner
-                  spec:
-                    image: "my-registry/my-app:${pipeline.sequenceId}" # Image built in previous stage
-                    # ... other image scan configurations
-
-    # Stage 3: Deploy to Development Environment
-    - stage:
-        name: "Deploy to Dev"
-        identifier: "deploy_to_dev"
-        description: "Deploys the application to the development environment."
-        type: CD
-        spec:
-          serviceConfig:
-            serviceRef: "my_idp_app_service" # Reference to a Harness Service definition
-          environmentRef: "dev_environment" # Reference to a Harness Environment definition
-          infrastructureDefinitions:
-            - identifier: "dev_k8s_infra" # Reference to a Harness Infrastructure definition
-              type: KubernetesDirect
-              spec:
-                connectorRef: "my_k8s_cluster_connector"
-                namespace: "dev-apps"
-          execution:
-            steps:
-              - step:
-                  name: "Rollout Deployment"
-                  identifier: "rollout_deployment"
-                  type: K8sRollingDeploy # Example for Kubernetes rolling deployment
-                  spec:
-                    # Configure manifest details (e.g., Helm chart, K8s manifests)
-                    manifests:
-                      - manifestRef: "my_app_helm_chart" # Reference to a Harness Manifest definition
-                    # ... other deployment specific configurations
-
-    # Stage 4: Manual Approval for Staging
-    - stage:
-        name: "Staging Approval"
-        identifier: "staging_approval"
-        description: "Requires manual approval before deploying to staging."
-        type: Approval
-        spec:
-          timeout: 1d # Timeout for approval
-          approvers:
-            userGroups: ["devops_team", "qa_team"] # Harness User Groups
-            minimumRequiredApprovals: 1
-          # Optional: Add instructions or notification settings
-
-    # Stage 5: Deploy to Staging Environment
-    - stage:
-        name: "Deploy to Staging"
-        identifier: "deploy_to_staging"
-        description: "Deploys the application to the staging environment."
-        type: CD
-        spec:
-          serviceConfig:
-            serviceRef: "my_idp_app_service"
-          environmentRef: "staging_environment"
-          infrastructureDefinitions:
-            - identifier: "staging_k8s_infra"
-              type: KubernetesDirect
-              spec:
-                connectorRef: "my_k8s_cluster_connector"
-                namespace: "staging-apps"
-          execution:
-            steps:
-              - step:
-                  name: "Rollout Deployment"
-                  identifier: "rollout_deployment"
-                  type: K8sRollingDeploy
-                  spec:
-                    manifests:
-                      - manifestRef: "my_app_helm_chart"
-                    # ... other deployment specific configurations
-              - step:
-                  name: "Run Integration Tests"
-                  identifier: "run_integration_tests"
-                  type: Run
-                  spec:
-                    shell: bash
-                    command: "run_integration_tests.sh" # Script to run tests against staging env
-
-    # Stage 6: Manual Approval for Production
-    - stage:
-        name: "Production Approval"
-        identifier: "production_approval"
-        description: "Requires manual approval before deploying to production."
-        type: Approval
-        spec:
-          timeout: 3d
-          approvers:
-            userGroups: ["release_managers", "security_team"]
-            minimumRequiredApprovals: 2
-
-    # Stage 7: Deploy to Production Environment
-    - stage:
-        name: "Deploy to Production"
-        identifier: "deploy_to_production"
-        description: "Deploys the application to the production environment."
-        type: CD
-        spec:
-          serviceConfig:
-            serviceRef: "my_idp_app_service"
-          environmentRef: "prod_environment"
-          infrastructureDefinitions:
-            - identifier: "prod_k8s_infra"
-              type: KubernetesDirect
-              spec:
-                connectorRef: "my_k8s_cluster_connector"
-                namespace: "prod-apps"
-          execution:
-            steps:
-              - step:
-                  name: "Rollout Deployment"
-                  identifier: "rollout_deployment"
-                  type: K8sRollingDeploy
-                  spec:
-                    manifests:
-                      - manifestRef: "my_app_helm_chart"
-                    # ... other deployment specific configurations
-              - step:
-                  name: "Post-Deployment Smoke Tests"
-                  identifier: "smoke_tests"
-                  type: Run
-                  spec:
-                    shell: bash
-                    command: "run_smoke_tests.sh"
