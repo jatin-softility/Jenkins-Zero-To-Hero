@@ -1,9 +1,9 @@
 apiVersion: backstage.io/v1alpha1
-kind: Template
+kind: Component
 metadata:
-  name: harness-product-onboarding
-  title: Product Onboarding
-  description: New Product Onboarding under an existing Org
-  tags:
-    - account-management
-    - solutions-factory
+  name: jenkins-zero-to-hero
+  description: Jenkins pipeline examples
+spec:
+  type: service
+  lifecycle: production
+  owner: user:default/sjatin
